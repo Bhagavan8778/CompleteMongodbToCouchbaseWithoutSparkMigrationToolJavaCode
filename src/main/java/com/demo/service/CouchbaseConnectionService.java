@@ -29,6 +29,7 @@ public class CouchbaseConnectionService {
     private Cluster cluster;
     private Bucket bucket;
     private byte[] currentCertificate;
+    private CouchbaseConnectionDetails currentDetails;
  
     public void storeCertificate(byte[] certificate) {
         this.currentCertificate = certificate;
@@ -157,6 +158,44 @@ public class CouchbaseConnectionService {
  
     public Cluster getCluster() {
         return cluster;
+    }
+    public void ping() {
+        if (this.cluster == null) {
+            throw new IllegalStateException("Couchbase cluster is not initialized.");
+        }
+        try {
+            // Will throw if remote Couchbase cluster cannot be contacted.
+            this.cluster.ping();
+        } catch (Exception ex) {
+            throw new RuntimeException("Couchbase ping failed: " + ex.getMessage(), ex);
+        }
+    }
+    public String getNodes() {
+        if (cluster == null) {
+            throw new IllegalStateException("Couchbase cluster is not initialized");
+        }
+        return currentDetails.getConnectionString();
+    }
+    
+    public String getUsername() {
+        if (currentDetails == null) {
+            throw new IllegalStateException("No active Couchbase connection");
+        }
+        return currentDetails.getUsername();
+    }
+    
+    public String getPassword() {
+        if (currentDetails == null) {
+            throw new IllegalStateException("No active Couchbase connection");
+        }
+        return currentDetails.getPassword();
+    }
+    
+    public String getBucketName() {
+        if (currentDetails == null) {
+            throw new IllegalStateException("No active Couchbase connection");
+        }
+        return currentDetails.getBucketName();
     }
     
 }

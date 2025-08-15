@@ -1,110 +1,3 @@
-//package com.demo.controller;
-//
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.messaging.simp.SimpMessagingTemplate;
-//import org.springframework.stereotype.Controller;
-//
-//import com.demo.dto.FunctionTransferProgress;
-//
-//@Controller
-//public class FunctionTransferProgressController {
-//    
-//    @Autowired
-//    private SimpMessagingTemplate messagingTemplate;
-//
-//    public void sendFunctionProgress(String functionName, String status, 
-//                                    int processed, int total, String message) {
-//        FunctionTransferProgress progress = new FunctionTransferProgress(
-//            functionName, status, processed, total, message
-//        );
-//        
-//        messagingTemplate.convertAndSend("/topic/function-progress", progress);
-//    }
-//
-//    public void sendFunctionError(String functionName, String errorMessage) {
-//        FunctionTransferProgress progress = new FunctionTransferProgress(
-//            functionName, "ERROR", 0, 0, errorMessage
-//        );
-//        
-//        messagingTemplate.convertAndSend("/topic/function-errors", progress);
-//    }
-//}
-
-
-
-//package com.demo.controller;
-//
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.messaging.simp.SimpMessagingTemplate;
-//import org.springframework.stereotype.Controller;
-//
-//import com.demo.dto.FunctionTransferProgress;
-//
-//@Controller
-//public class FunctionTransferProgressController {
-//    
-//    @Autowired
-//    private SimpMessagingTemplate messagingTemplate;
-//
-//    private int totalFunctions = 0;
-//    private int processedFunctions = 0;
-//
-//    public void startMigration(int totalCount) {
-//        this.totalFunctions = totalCount;
-//        this.processedFunctions = 0;
-//        sendProgress("STARTED", "Migration initialized with " + totalCount + " functions");
-//    }
-//
-//    public void updateFunctionProgress(String functionName, boolean success) {
-//        processedFunctions++;
-//        String status = processedFunctions >= totalFunctions ? "COMPLETED" : "IN_PROGRESS";
-//        String message = success ? "Processed " + functionName : "Failed to process " + functionName;
-//        
-//        sendProgress(status, message);
-//        
-//        if (status.equals("COMPLETED")) {
-//            sendCompletionSummary();
-//        }
-//    }
-//
-//    private void sendProgress(String status, String message) {
-//        FunctionTransferProgress progress = new FunctionTransferProgress(
-//            "Overall Progress",
-//            status,
-//            processedFunctions,
-//            totalFunctions,
-//            message
-//        );
-//        
-//        System.out.printf("[Progress] %d/%d (%s) - %s%n",
-//            processedFunctions, totalFunctions, status, message);
-//            
-//        messagingTemplate.convertAndSend("/topic/function-progress", progress);
-//    }
-//
-//    private void sendCompletionSummary() {
-//        FunctionTransferProgress completion = new FunctionTransferProgress(
-//            "Summary",
-//            "COMPLETED",
-//            processedFunctions,
-//            totalFunctions,
-//            "Successfully processed " + processedFunctions + "/" + totalFunctions + " functions"
-//        );
-//        messagingTemplate.convertAndSend("/topic/function-progress", completion);
-//    }
-//
-//    public void sendFunctionError(String functionName, Exception error) {
-//        FunctionTransferProgress errorProgress = new FunctionTransferProgress(
-//            functionName,
-//            "ERROR",
-//            processedFunctions,
-//            totalFunctions,
-//            "Error processing function: " + error.getMessage()
-//        );
-//        messagingTemplate.convertAndSend("/topic/function-errors", errorProgress);
-//    }
-//}
-
 package com.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,7 +8,6 @@ import com.demo.dto.FunctionTransferProgress;
 
 @Controller
 public class FunctionTransferProgressController {
-    
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
@@ -139,16 +31,14 @@ public class FunctionTransferProgressController {
         }
 
         if (processedFunctions >= totalFunctions) {
-            sendFunctionError("System", new IllegalStateException("Received progress update beyond total count"));
+            sendFunctionError("System", "Received progress update beyond total count");
             return;
         }
 
         processedFunctions++;
         String status = processedFunctions >= totalFunctions ? "COMPLETED" : "IN_PROGRESS";
         String message = success ? "Processed " + functionName : "Failed to process " + functionName;
-        
         sendProgress(status, message);
-        
         if (status.equals("COMPLETED")) {
             isCompleted = true;
             sendCompletionSummary();
@@ -163,10 +53,8 @@ public class FunctionTransferProgressController {
             totalFunctions,
             message
         );
-        
         System.out.printf("[Progress] %d/%d (%s) - %s%n",
             processedFunctions, totalFunctions, status, message);
-            
         messagingTemplate.convertAndSend("/topic/function-progress", progress);
     }
 
@@ -192,6 +80,24 @@ public class FunctionTransferProgressController {
         messagingTemplate.convertAndSend("/topic/function-errors", errorProgress);
         System.err.println("[Error] " + errorProgress.getMessage());
     }
+
+    public void sendFunctionError(String functionName, String errorMessage) {
+        FunctionTransferProgress errorProgress = new FunctionTransferProgress(
+            functionName,
+            "ERROR",
+            processedFunctions,
+            totalFunctions,
+            errorMessage != null ? errorMessage : "Unknown error"
+        );
+        messagingTemplate.convertAndSend("/topic/function-errors", errorProgress);
+        System.err.println("[Error] " + errorProgress.getMessage());
+    }
+
+    public void sendFunctionProgress(String functionName, String status, 
+                                   int processed, int total, String message) {
+        FunctionTransferProgress progress = new FunctionTransferProgress(
+            functionName, status, processed, total, message
+        );
+        messagingTemplate.convertAndSend("/topic/function-progress", progress);
+    }
 }
-
-
