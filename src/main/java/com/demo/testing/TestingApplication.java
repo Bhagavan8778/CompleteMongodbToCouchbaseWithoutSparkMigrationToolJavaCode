@@ -1,23 +1,28 @@
 package com.demo.testing;
 
 import org.springframework.boot.SpringApplication;
+
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.retry.annotation.EnableRetry;
 
 @SpringBootApplication
 @EnableConfigurationProperties
 @EnableRetry
+@EnableAspectJAutoProxy
 @ComponentScan(basePackages = {
+"com.demo.annotation",
 "com.demo.config",
 "com.demo.controller" , 
 "com.demo.dto",
 "com.demo.exception",
 "com.demo.service",
-"com.demo.testing",
+"com.demo.testing", 
 "com.demo.util",
-"com.demo.kafka"
+"com.demo.kafka",
+"com.demo.security"
 
 })
 public class TestingApplication {
@@ -27,4 +32,4 @@ public class TestingApplication {
 	}
 
 }
-//web socket completed bhagavan
+//complete backend code

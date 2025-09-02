@@ -1,4 +1,4 @@
-//package com.demo.config;
+//package com.demo.config
 //
 //import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 //import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -39,17 +39,29 @@
 package com.demo.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.*;
+
+import com.demo.security.WebSocketSecurityConfig;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+	 @Autowired
+	    private WebSocketSecurityConfig webSocketSecurityConfig;
+	 @Override
+	    public void configureClientInboundChannel(ChannelRegistration registration) {
+	       
+	        registration.interceptors(webSocketSecurityConfig.authenticationInterceptor());
+	    }
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.setApplicationDestinationPrefixes("/app");
@@ -58,39 +70,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // For SockJS clients
         registry.addEndpoint("/ws-migration", "/ws-functions")
                 .setAllowedOriginPatterns("http://localhost:3000", "http://127.0.0.1:3000")
                 .withSockJS()
-                .setSuppressCors(false); // Changed to false to enable CORS handling
+                .setSuppressCors(false); 
 
-        // For native WebSocket clients (fallback)
         registry.addEndpoint("/ws-migration", "/ws-functions")
                 .setAllowedOriginPatterns("http://localhost:3000", "http://127.0.0.1:3000");
     }
 
-    @Bean
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        
-        // Configure CORS
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://127.0.0.1:3000"); // Added alternative localhost
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        config.addExposedHeader("Authorization"); // Expose auth header if needed
-        
-        // Important for SockJS
-        config.addExposedHeader("Access-Control-Allow-Origin");
-        config.addExposedHeader("Access-Control-Allow-Credentials");
-        
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
-
-    // Add transport configuration for better stability
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
         registration.setMessageSizeLimit(1024 * 1024); // 1MB max message size

@@ -1,4 +1,3 @@
-// CouchbaseFunctionService.java
 package com.demo.service;
  
 import com.couchbase.client.core.error.CouchbaseException;

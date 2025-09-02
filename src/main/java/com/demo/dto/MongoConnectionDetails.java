@@ -1,7 +1,12 @@
 package com.demo.dto;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 public class MongoConnectionDetails {
-	@NotBlank
+	@NotBlank(message = "URI is required")
+    @Pattern(regexp = "^mongodb(\\+srv)?://.*$", 
+             message = "Invalid MongoDB URI format")
+    @Size(max = 500, message = "URI too long")
 	private String uri;
     public String getUri() {
 		return uri;
